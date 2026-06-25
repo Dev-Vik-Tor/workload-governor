@@ -16,6 +16,11 @@ mod storage;
 #[cfg(test)]
 mod test;
 
+// In tests we run on the native host, which has std; expose it explicitly
+// since the crate is unconditionally `no_std`.
+#[cfg(test)]
+extern crate std;
+
 use soroban_sdk::{contract, contractimpl, panic_with_error, Address, BytesN, Env, Symbol};
 
 use crate::errors::ContractError;
