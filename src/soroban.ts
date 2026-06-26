@@ -207,7 +207,7 @@ export class SorobanService {
     }
   }
 
-  async getContractData(key: xdr.ScVal): Promise<Record<string, unknown> | null> {
+  async getContractData(key: xdr.ScVal): Promise<unknown> {
     try {
       console.log('[Soroban] Fetching contract data...');
       const data = await this.server.getContractData(
@@ -218,7 +218,7 @@ export class SorobanService {
 
       console.log('[Soroban] Contract data retrieved');
       // Return the raw data for the caller to process
-      return data as Record<string, unknown>;
+      return data;
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error('[Soroban] Failed to fetch contract data:', errorMsg);

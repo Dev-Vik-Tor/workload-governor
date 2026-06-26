@@ -71,12 +71,13 @@ export class HorizonService {
           sequence: account.sequence,
           subentryCount: account.subentry_count,
           balances: account.balances.map((balance) => {
-            const balanceWithOptional = balance as Record<string, unknown>;
             return {
               balance: balance.balance,
               asset_type: balance.asset_type,
-              asset_code: balanceWithOptional.asset_code as string | undefined,
-              asset_issuer: balanceWithOptional.asset_issuer as string | undefined,
+              asset_code:
+                'asset_code' in balance ? (balance.asset_code as string) : undefined,
+              asset_issuer:
+                'asset_issuer' in balance ? (balance.asset_issuer as string) : undefined,
             };
           }),
         };
@@ -86,7 +87,8 @@ export class HorizonService {
         }
 
         lastError = error as Error;
-        const statusCode = (error as Record<string, unknown>)?.response?.status as number | undefined;
+        const errorResponse = (error as unknown as { response?: { status: number } })?.response?.status;
+        const statusCode = typeof errorResponse === 'number' ? errorResponse : undefined;
 
         // Retry on rate limit (429) or service unavailable (503)
         if (statusCode === 429 || statusCode === 503) {
@@ -134,7 +136,8 @@ export class HorizonService {
         }));
       } catch (error) {
         lastError = error as Error;
-        const statusCode = (error as Record<string, unknown>)?.response?.status as number | undefined;
+        const errorResponse = (error as unknown as { response?: { status: number } })?.response?.status;
+        const statusCode = typeof errorResponse === 'number' ? errorResponse : undefined;
 
         // Retry on rate limit (429) or service unavailable (503)
         if (statusCode === 429 || statusCode === 503) {
@@ -156,14 +159,15 @@ export class HorizonService {
 
   streamEvents(
     accountId: string,
-    onUpdate: (event: Record<string, unknown>) => void,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onUpdate: (event: any) => void,
     onError: (error: Error) => void,
   ): void {
     this.server
       .transactions()
       .forAccount(accountId)
       .stream({
-        onmessage: onUpdate as (event: Record<string, unknown>) => void,
+        onmessage: onUpdate,
         onerror: onError,
       });
   }

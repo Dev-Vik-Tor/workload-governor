@@ -28,12 +28,14 @@ class HorizonService {
                     id: account.id,
                     sequence: account.sequence,
                     subentryCount: account.subentry_count,
-                    balances: account.balances.map((balance) => ({
-                        balance: balance.balance,
-                        asset_type: balance.asset_type,
-                        asset_code: balance.asset_code,
-                        asset_issuer: balance.asset_issuer,
-                    })),
+                    balances: account.balances.map((balance) => {
+                        return {
+                            balance: balance.balance,
+                            asset_type: balance.asset_type,
+                            asset_code: 'asset_code' in balance ? balance.asset_code : undefined,
+                            asset_issuer: 'asset_issuer' in balance ? balance.asset_issuer : undefined,
+                        };
+                    }),
                 };
             }
             catch (error) {
@@ -41,7 +43,8 @@ class HorizonService {
                     throw new Error(`Account not found: ${accountId}`);
                 }
                 lastError = error;
-                const statusCode = error?.response?.status;
+                const errorResponse = error?.response?.status;
+                const statusCode = typeof errorResponse === 'number' ? errorResponse : undefined;
                 // Retry on rate limit (429) or service unavailable (503)
                 if (statusCode === 429 || statusCode === 503) {
                     if (attempt < this.maxRetries - 1) {
@@ -79,7 +82,8 @@ class HorizonService {
             }
             catch (error) {
                 lastError = error;
-                const statusCode = error?.response?.status;
+                const errorResponse = error?.response?.status;
+                const statusCode = typeof errorResponse === 'number' ? errorResponse : undefined;
                 // Retry on rate limit (429) or service unavailable (503)
                 if (statusCode === 429 || statusCode === 503) {
                     if (attempt < this.maxRetries - 1) {
@@ -93,7 +97,9 @@ class HorizonService {
         }
         throw (lastError || new Error(`Failed to fetch transactions after ${this.maxRetries} attempts`));
     }
-    streamEvents(accountId, onUpdate, onError) {
+    streamEvents(accountId, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onUpdate, onError) {
         this.server
             .transactions()
             .forAccount(accountId)
