@@ -26,6 +26,7 @@ exports.globalLimiter = (0, express_rate_limit_1.default)({
     legacyHeaders: false,
     keyGenerator: (req) => getClientIp(req),
     handler: (req, res) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rateLimitInfo = req.rateLimit;
         const retryAfter = rateLimitInfo?.resetTime && typeof rateLimitInfo.resetTime === 'number'
             ? Math.ceil((rateLimitInfo.resetTime - Date.now()) / 1000)
